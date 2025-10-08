@@ -23,10 +23,11 @@ def generate_random_points(num_points, bounds):
 
     return points
 
-def generate_domain_points(num_points, domain_bound):
+def generate_domain_points(num_points, domain_bound,T_max):
     '''Sample data from the PDE and boundary conditions.'''
     spatial_coords = generate_random_points(num_points, domain_bound).to(device)
-    t = torch.zeros_like(spatial_coords[:,0:1]).to(device)
+    t = torch.rand_like(spatial_coords[:,0:1]) * T_max
+    t = t.to(device)
     return spatial_coords, t
 
 def generate_ic_points(num_points, domain_bound):

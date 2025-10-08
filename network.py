@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 
 #%% Neural Network architecture used in DGM
-class NeuralNetwork:
+class NeuralNetwork(nn.Module):
     def __init__(self, output_dim, input_dim, trans1 = "tanh", trans2 = "tanh"):
         super(NeuralNetwork, self).__init__()
         self.output_dim = output_dim
@@ -114,9 +114,10 @@ class DGMNet(nn.Module):
         super(DGMNet, self).__init__()
         self.initial_layer = DenseLayer(layer_width, input_dim + 1, transformation="tanh")
         self.n_layers = n_layers
+        self.LSTMLayerList = nn.ModuleList()
         for _ in range(self.n_layers):
             self.LSTMLayerList.append(NeuralNetwork(layer_width, input_dim + 1))
-
+        self.final_layer = DenseLayer(1, layer_width, transformation=final_trans)
     def forward(self,t,x):
         '''
             Args:
@@ -125,13 +126,13 @@ class DGMNet(nn.Module):
 
             Run the DGM model and obtain fitted function value at the inputs (t,x)
         '''
-
-        # define input vector as time-space pairs
         X = torch.cat([t,x],1)
         S = self.initial_layer(X)
+        # Call Intermediate LSTM Layers
+        for layer in self.LSTMLayerList:
+            S = layer(S, X)
 
-        # call intermediate LSTM layers
-        for i in range(self.n_layers):
-            S = self.LSTMLayerList[i](S,X)
+        # The final layer outputs the solution u(t, x)
         result = self.final_layer(S)
         return result
+
