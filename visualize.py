@@ -1,7 +1,15 @@
+from typing import List
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import torch
+import numpy as np
+import torch.nn as nn
+
+from data_sampling import analytical_solution
+
+
 def visualize_points_1d(domain_points:torch.Tensor,
                         boundary_points:torch.Tensor,
                         bounds: list,
@@ -119,12 +127,93 @@ def visualize_points_2d(domain_points:torch.Tensor,
     plt.show()
 
 
+def visualize_solution(model: nn.Module, lx_1d: float, t_test: float, n_test_points: int = 500):
+    """
+    Generates test points at a fixed time t_test and plots the NN solution vs. Analytical solution.
+    """
+    model.eval()  # Set model to evaluation mode
+    device = next(model.parameters()).device  # Get the model's device
 
+    # 1. Generate Test Points
+    # Spatial points (x) linearly spaced from 0 to lx_1d
+    x_test_np = np.linspace(0, lx_1d, n_test_points, dtype=np.float32)
+    x_test = torch.from_numpy(x_test_np).reshape(-1, 1).to(device)
 
+    # Time point (t) is fixed
+    t_test_tensor = torch.full_like(x_test, t_test).to(device)
 
+    # 2. Calculate Neural Network Solution (u_NN)
+    with torch.no_grad():
+        u_nn = model(t_test_tensor, x_test)
+        # Move the result to CPU and convert to NumPy for plotting
+        u_nn_np = u_nn.cpu().numpy().flatten()
 
+    # 3. Calculate Analytical Solution (u_exact)
+    u_exact = analytical_solution(t_test_tensor, x_test)
+    u_exact_np = u_exact.cpu().numpy().flatten()
 
+    # 4. Calculate Absolute Error
+    error_np = np.abs(u_nn_np - u_exact_np)
 
+    # 5. Plotting
+
+    # Create a figure with two subplots: Solution and Error
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
+
+    # --- Top Subplot: Solution Comparison ---
+    ax1.plot(x_test_np, u_exact_np, label='Analytical Solution', color='tab:blue', linewidth=2)
+    ax1.plot(x_test_np, u_nn_np, label='DGM Solution (u_NN)', color='tab:red', linestyle='--', linewidth=2)
+    ax1.set_title(f'Solution Comparison at Time $t = {t_test:.2f}$', fontsize=14)
+    ax1.set_ylabel('$u(x, t)$', fontsize=12)
+    ax1.legend()
+    ax1.grid(True, linestyle=':', alpha=0.7)
+
+    # --- Bottom Subplot: Absolute Error ---
+    ax2.plot(x_test_np, error_np, label='Absolute Error $|u_{NN} - u_{exact}|$', color='tab:green', linewidth=1)
+    ax2.set_xlabel('Spatial Coordinate $x$', fontsize=12)
+    ax2.set_ylabel('Abs. Error', fontsize=12)
+    ax2.set_ylim(0, np.max(error_np) * 1.1)  # Auto-scale Y-axis for error
+    ax2.grid(True, linestyle=':', alpha=0.7)
+    ax2.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))  # Use scientific notation for small errors
+
+    plt.tight_layout()
+    plt.show()
+
+def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
+    """
+    Plots the DGM solution as a contour map in the x-y plane.
+    """
+    model.eval()
+    device = next(model.parameters()).device
+    t = t_test
+    # 1. create a 2d Meshgrid
+    x_min  , x_max = bounds[0]
+    y_min, y_max =  bounds[1]
+
+    x_np = np.linspace(x_min, x_max, n_grid)
+    y_np = np.linspace(y_min, y_max, n_grid)
+    X, Y = np.meshgrid(x_np, y_np)
+
+    # Flatten grid and convert to tensors for model input
+    x_test = torch.from_numpy(X.flatten()).float().reshape(-1, 1).to(device)
+    y_test = torch.from_numpy(Y.flatten()).float().reshape(-1, 1).to(device)
+    t_test = torch.full_like(x_test, t_test).to(device)
+    spatial_coords = torch.cat([x_test, y_test], 1)
+
+    # 2. Calculate Solution
+    with torch.no_grad():
+        u_nn = model(t_test, spatial_coords)
+        u_nn_np = u_nn.cpu().numpy().reshape(n_grid, n_grid)
+
+    # 3 Plotting
+    plt.figure(figsize=(10, 8))
+    contour = plt.contourf(X, Y, u_nn_np, cmap='viridis')
+    plt.colorbar(contour, label='$u(x, y, t)$')
+    plt.title(f'DGM Solution at Time $t = {t:.2f}$', fontsize=14)
+    plt.xlabel('$x$', fontsize=12)
+    plt.ylabel('$y$', fontsize=12)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
 
 
 

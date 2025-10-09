@@ -24,6 +24,26 @@ def pde_residual_loss(model, t,x, alpha, f_tx):
 
     return residual
 
+def pde_residual_loss_2d(model,t, x,y, alpha, f_txy):
+
+    t.requires_grad_(True); x.requires_grad_(True); y.requires_grad_(True)
+    u = model(t, torch.cat([x, y],1))
+    # 1st Derivative
+    u_t = torch.autograd.grad(u, t, grad_outputs=torch.ones_like(u), create_graph=True, retain_graph=True)[0]
+    u_x = torch.autograd.grad(u, x, grad_outputs=torch.ones_like(u), create_graph=True, retain_graph=True)[0]
+    u_y = torch.autograd.grad(u, y, grad_outputs=torch.ones_like(u), create_graph=True, retain_graph=True)[0]
+
+    # 2nd Derivative
+    u_xx = torch.autograd.grad(u_x,x, grad_outputs=torch.ones_like(u_x), create_graph=True, retain_graph=True)[0]
+    u_yy = torch.autograd.grad(u_y,y, grad_outputs=torch.ones_like(u_y),create_graph=True, retain_graph=True)[0]
+
+    # Residual
+    residual = u_t - alpha * (u_xx + u_yy) - f_txy
+
+    t.requires_grad_(False); x.requires_grad_(False); y.requires_grad_(False)
+
+    return residual
+
 def loss_function(  model: nn.Module,
     # Interior Points
     t_int: torch.Tensor, x_int: torch.Tensor, source_term_interior: torch.Tensor,
@@ -59,3 +79,27 @@ def loss_function(  model: nn.Module,
 
     return L_total, L_pde.item(), L_ic.item(), L_bc.item()
 
+def loss_function_2d(  model: nn.Module,t_int, x_int, y_int, source_term_interior,
+                            t_ic, x_ic, y_ic, target_ic,
+                            t_bc, x_bc, y_bc, target_bc,
+                            alpha,
+                            lambda_pde=1.0,
+                            lambda_ic=100.0,
+                            lambda_bc=100.0):
+    criterion = nn.MSELoss()
+    # 1. PDE Loss
+    residual_interior = pde_residual_loss_2d(model,t_int, x_int, y_int, alpha, source_term_interior)
+    L_pde = criterion(residual_interior, torch.zeros_like(residual_interior))
+
+    # 2. IC Loss
+    u_predicted_ic = model(t_ic, torch.cat([x_ic, y_ic],1))
+    L_ic = criterion(u_predicted_ic, target_ic)
+
+    # 3. BC Loss
+    u_predicted_bc = model(t_bc, torch.cat([x_bc, y_bc],1))
+    L_bc = criterion(u_predicted_bc, target_bc)
+
+
+    L_total = (lambda_pde * L_pde) + (lambda_ic * L_ic) + (lambda_bc * L_bc)
+
+    return L_total, L_pde.item(), L_ic.item(), L_bc.item()

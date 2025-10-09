@@ -1,0 +1,38 @@
+import torch
+
+#%% All the source, boundary and initial condition functions in 1D
+# Example for u(x, t) = exp(-t) * sin(pi*x)
+def source_term_fn_1D(t, x, alpha):
+    # f(t,x) = u_t - alpha*u_xx (plug known solution into PDE)
+    # u_t = -exp(-t)*sin(pi*x)
+    # u_xx = -pi^2 * exp(-t) * sin(pi*x)
+    return (-torch.exp(-t) + alpha * torch.pi**2 * torch.exp(-t)) * torch.sin(torch.pi * x)
+
+def initial_condition_fn_1D(x):
+    # u(x, 0) = sin(pi*x)
+    return torch.sin(torch.pi * x)
+
+def boundary_condition_fn_1D(t, x):
+    # u(0, t) = u(1, t) = exp(-t)*sin(0 or pi) = 0
+    return torch.zeros_like(t)
+
+
+#%% All the source, boundary and initial condition functions in 2D
+
+# Example for u(x, t) = exp(-t) * sin(pi*x) * sin(pi*y)
+def source_term_fn_2D(t, x, y , alpha):
+    # u_exact(t,x,y) = exp(-t) * sin(pi*x) * sin(pi*y)
+    u_exact = torch.exp(-t) * torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
+    const = (2.0 * (torch.pi**2) * alpha) - 1.0
+    return u_exact * const
+
+def initial_condition_fn_2D(x,y):
+    # u(x, 0) = sin(pi*x)
+    return torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
+
+def boundary_condition_fn_2D(t, x, y ):
+    # u(0, t) = u(1, t) = exp(-t)*sin(0 or pi) = 0
+    return torch.zeros_like(t)
+
+
+#%%
