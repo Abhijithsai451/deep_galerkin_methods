@@ -131,10 +131,10 @@ bc_data = (t_bc, x_bc,y_bc, u_bc)
 visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
 
 # --- Network Initialization and Training ---
-num_layers = 5
+num_layers = 6
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 5000
+epochs = 6000
 
 model = network.DGMNet(nodes_per_layer, num_layers, 2).to(device)
 
@@ -152,7 +152,13 @@ trainer.train(
     lambda_ic=50.0,
     lambda_bc=50.0
 )
-t_test_time = 2
+t_test_time = 0.05
+visualize_2d(
+    model=model,
+    bounds=bounds_2d,
+    t_test=t_test_time,
+    n_grid=500
+)
 visualize_solution_2d(
     model=model,
     bounds=bounds_2d,

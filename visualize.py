@@ -6,8 +6,9 @@ import pandas as pd
 import torch
 import numpy as np
 import torch.nn as nn
+from matplotlib.patches import Patch
 
-from data_sampling import analytical_solution
+from data_sampling import analytical_solution, analytical_solution_2d
 
 
 def visualize_points_1d(domain_points:torch.Tensor,
@@ -179,6 +180,67 @@ def visualize_solution(model: nn.Module, lx_1d: float, t_test: float, n_test_poi
     plt.tight_layout()
     plt.show()
 
+def visualize_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
+    """
+    Plots the DGM solution as a contour map in the x-y plane.
+    """
+    model.eval()
+    device = next(model.parameters()).device
+    t = t_test
+    # 1. create a 2d Meshgrid
+    x_min  , x_max = bounds[0]
+    y_min, y_max =  bounds[1]
+
+    x_np = np.linspace(x_min, x_max, n_grid)
+    y_np = np.linspace(y_min, y_max, n_grid)
+    X, Y = np.meshgrid(x_np, y_np)
+
+    # Flatten grid and convert to tensors for model input
+    x_test = torch.from_numpy(X.flatten()).float().reshape(-1, 1).to(device)
+    y_test = torch.from_numpy(Y.flatten()).float().reshape(-1, 1).to(device)
+    t_test = torch.full_like(x_test, t_test).to(device)
+    spatial_coords = torch.cat([x_test, y_test], 1)
+
+    # 2. Calculate Solution
+    with torch.no_grad():
+        u_nn = model(t_test, spatial_coords)
+        u_nn_np = u_nn.cpu().numpy().reshape(n_grid, n_grid)
+
+        # Analytical Solution
+        u_exact = analytical_solution_2d(t_test, x_test, y_test)
+        u_exact_np = u_exact.cpu().numpy().reshape(n_grid, n_grid)
+
+    # 3. Calculate absolute Error
+    error_np = np.abs(u_nn_np - u_exact_np)
+
+    # 4 Plotting
+    fig, axes = plt.subplots(1,2,figsize=(14, 6))
+
+    # -- Determine Global Colorbar limits for Comparision
+    vmax_solution = max(u_nn_np.max(), u_exact_np.max())
+    vmin_solution = min(u_nn_np.min(), u_exact_np.min())
+    levels_solution = np.linspace(vmin_solution, vmax_solution, 10)
+
+    ax1 = axes[0]
+    contour1 = ax1.contourf(X, Y, u_nn_np, levels=levels_solution, cmap='viridis')
+    fig.colorbar(contour1, ax=ax1, label='$u_{NN}(x, y, t)$')
+    ax1.set_xlabel('$x$', fontsize=12)
+    ax1.set_ylabel('$y$', fontsize=12)
+    ax1.set_title(f'DGM Solution at Time $t = {t:.2f}$', fontsize=14)
+    ax1.set_aspect('equal', adjustable='box')
+
+    ax2 = axes[1]
+
+    eror_vmax = error_np.max()
+    contour2 = ax2.contourf(X, Y, error_np, levels=50, cmap='Reds', vmax=eror_vmax, extend='max')
+    cbar = fig.colorbar(contour2, ax=ax2, format = '%.1e',label='Absolute Error $|u_{NN} - u_{exact}|$')
+    ax2.set_xlabel('$x$', fontsize=12)
+    ax2.set_ylabel('$y$', fontsize=12)
+    ax2.set_title(f'Absolute Error at Time $t = {t:.2f}$', fontsize=14)
+    ax2.set_aspect('equal', adjustable='box')
+    plt.tight_layout()
+    plt.show()
+
 def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
     """
     Plots the DGM solution as a contour map in the x-y plane.
@@ -205,26 +267,41 @@ def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: f
         u_nn = model(t_test, spatial_coords)
         u_nn_np = u_nn.cpu().numpy().reshape(n_grid, n_grid)
 
-    # 3 Plotting
-    plt.figure(figsize=(10, 8))
-    contour = plt.contourf(X, Y, u_nn_np, cmap='viridis')
-    plt.colorbar(contour, label='$u(x, y, t)$')
-    plt.title(f'DGM Solution at Time $t = {t:.2f}$', fontsize=14)
-    plt.xlabel('$x$', fontsize=12)
-    plt.ylabel('$y$', fontsize=12)
-    plt.gca().set_aspect('equal', adjustable='box')
+        # Analytical Solution
+        u_exact = analytical_solution_2d(t_test, x_test, y_test)
+        u_exact_np = u_exact.cpu().numpy().reshape(n_grid, n_grid)
+
+    # 3. Plotting the Analytical solution vs DGM Solution
+    fig = plt.figure (figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot 1 DGM Solution
+    surf_dgm = ax.plot_surface(X, Y, u_nn_np, cmap='viridis', edgecolor='none', alpha=0.8)
+
+    # Plot 2 Analytical Solution
+    surf_exact = ax.plot_wireframe(X, Y, u_exact_np, color='blue', linewidth=1.0, rstride=5, cstride=5)
+
+    z_min = min(u_nn_np.min(), u_exact_np.min())
+    z_max = max(u_nn_np.max(), u_exact_np.max())
+
+    ax.legend(
+        handles = [
+            Patch(color = 'red', alpha = 0.8, label = 'DGM Solution'),
+            Patch(color = 'blue', alpha = 0.8, label = 'Analytical Solution')
+        ],
+        loc = 'upper right',
+        bbox_to_anchor = (1.0, 1.0)
+    )
+    fig.colorbar(surf_dgm, shrink=0.5, aspect=10, pad=0.1, label='$u_{NN}(x, y, t)$')
+
+    ax.set_title(f'DGM Solution vs Analytical Solution at Time $t = {t:.2f}$', fontsize=14)
+    ax.set_xlabel('$x$', fontsize=12)
+    ax.set_ylabel('$y$', fontsize=12)
+    ax.set_zlabel('$u(x, y, t)$', fontsize=12)
+    ax.set_zlim(z_min, z_max)
+    ax.view_init(elev=30, azim=45)
+    plt.tight_layout()
     plt.show()
-
-
-
-
-
-
-
-
-
-
-
 
 
 
