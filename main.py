@@ -4,7 +4,7 @@ from visualize import *
 from data_sampling import *
 from utility_functions import *
 #%% Deep Galerkin Method in 1D
-'''
+
 lx_1d = 2.0
 T_max = 2.0
 bounds_1d = [[0.0, lx_1d]]
@@ -84,7 +84,7 @@ visualize_solution(
     t_test=t_test_time,
     n_test_points=500
 )
-'''
+
 #%% Deep Galerkin Method in 2D
 
 lx_2d = 2.0

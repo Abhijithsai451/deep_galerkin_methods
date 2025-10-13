@@ -32,7 +32,7 @@ class DGMTrainer:
         self.model.train()
 
         # Unpack and move data to device once (tensors are already on device but safer to move again)
-        t_int, x_int,y_int, f_tx = (d.to(self.device) for d in interior_data)
+        t_int, x_int, f_tx = (d.to(self.device) for d in interior_data)
         t_ic, x_ic, u_ic = (d.to(self.device) for d in ic_data)
         t_bc, x_bc, u_bc = (d.to(self.device) for d in bc_data)
 
