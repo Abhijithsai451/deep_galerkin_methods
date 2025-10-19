@@ -9,7 +9,7 @@ import torch.nn as nn
 from matplotlib import cm
 from matplotlib.patches import Patch
 
-from data_sampling import analytical_solution, analytical_solution_2d
+from heat_equation.data_sampling import analytical_solution, analytical_solution_2d
 
 
 def visualize_points_1d(domain_points:torch.Tensor,
