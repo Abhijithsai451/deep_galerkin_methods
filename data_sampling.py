@@ -120,30 +120,3 @@ def generate_boundary_points(num_points: int, domain_bound: list) -> torch.Tenso
     else:
         return torch.empty(0, num_dims)
 
-# Analytical Solution
-def analytical_solution(t: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-    """
-    The known analytical solution for the 1D Heat Equation example: u(x, t) = exp(-t) * sin(pi*x)
-    """
-    # Ensure all inputs are tensors and on the correct device for multiplication
-    if not isinstance(t, torch.Tensor):
-        t = torch.tensor(t, dtype=torch.float32, device=x.device)
-
-    # Ensure t has the same shape as x for element-wise multiplication
-    if t.dim() == 1:
-        t = t.reshape(-1, 1)
-
-    return torch.exp(-t) * torch.sin(torch.pi * x)
-
-def analytical_solution_2d(t: torch.Tensor, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-    """
-        The known analytical solution for the 1D Heat Equation example: u(x, t) = exp(-t) * sin(pi*x)
-    """
-    # Ensuring all the imputs are tensors and on the correct device for multiplication
-    if not isinstance(t, torch.Tensor):
-        t = torch.tensor(t, dtype=torch.float32, device=x.device)
-
-    # Ensuring t has the same shape as x and y for element wise multiplication
-    if t.dim() == 1:
-        t = t.reshape(-1, 1)
-    return torch.exp(-t) * torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
