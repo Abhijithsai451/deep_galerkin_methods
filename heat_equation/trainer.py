@@ -3,7 +3,7 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from loss import loss_function, loss_function_2d
+from heat_equation.loss import loss_function, loss_function_2d
 
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
@@ -22,8 +22,7 @@ class DGMTrainer:
 
     def train(self,
               epochs: int,
-              # Data tuples MUST be passed in the correct format: (t, x, target)
-              interior_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+              domain_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
               ic_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
               bc_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
               lambda_ic: float = 100.0,
@@ -31,13 +30,14 @@ class DGMTrainer:
 
         self.model.train()
 
-        # Unpack and move data to device once (tensors are already on device but safer to move again)
-        t_int, x_int, f_tx = (d.to(self.device) for d in interior_data)
+        # Unpack and move data to device for training
+        t_int, x_int, f_tx = (d.to(self.device) for d in domain_data)
         t_ic, x_ic, u_ic = (d.to(self.device) for d in ic_data)
         t_bc, x_bc, u_bc = (d.to(self.device) for d in bc_data)
 
         print(
-            f"Starting training on {self.device}. Interior: {t_int.size(0)}, IC: {t_ic.size(0)}, BC: {t_bc.size(0)} points.")
+            f"Starting training on {self.device}. Interior: {t_int.size(0)},"
+            f" IC: {t_ic.size(0)}, BC: {t_bc.size(0)} points.")
 
         for epoch in range(epochs):
             self.optimizer.zero_grad()
@@ -60,7 +60,8 @@ class DGMTrainer:
             # Logging
             if (epoch + 1) % 100 == 0:
                 print(
-                    f"Epoch {epoch + 1}/{epochs} | Total Loss: {total_loss.item():.4f} | L_pde: {pde_loss_val:.4f} | L_ic: {ic_loss_val:.4f} | L_bc: {bc_loss_val:.4f}")
+                    f"Epoch {epoch + 1}/{epochs} | Total Loss: {total_loss.item():.4f} "
+                    f"| L_pde: {pde_loss_val:.4f} | L_ic: {ic_loss_val:.4f} | L_bc: {bc_loss_val:.4f}")
 
 
 class DGMTrainer_2D:
