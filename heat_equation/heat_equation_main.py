@@ -1,7 +1,7 @@
 import network
 from trainer import DGMTrainer, DGMTrainer_2D
 from visualize import *
-from data_sampling import *
+from heat_equation.data_sampling import *
 from utility_functions import *
 #%% Deep Galerkin Method in 1D
 
@@ -21,7 +21,7 @@ N_BC =400
 
 # --- Data Preparation ---
 
-# 1. Interior Data (t in [0, T_max], x in [0, lx_1d])
+# 1. Domain Data (t in [0, T_max], x in [0, lx_1d])
 x_int, t_int = generate_domain_points(N_INT, bounds_1d, T_max)
 f_tx = source_term_fn_1D(t_int, x_int, ALPHA).to(device)
 interior_data = (t_int, x_int, f_tx)
