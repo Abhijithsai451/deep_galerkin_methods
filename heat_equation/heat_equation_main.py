@@ -18,39 +18,24 @@ N_INT = 1500
 N_IC = 400
 N_BC =400
 
-# --- Target Functions (Must be defined for your specific problem) ---
-# Example for u(x, t) = exp(-t) * sin(pi*x)
-def source_term_fn(t, x, alpha):
-    # f(t,x) = u_t - alpha*u_xx (plug known solution into PDE)
-    # u_t = -exp(-t)*sin(pi*x)
-    # u_xx = -pi^2 * exp(-t) * sin(pi*x)
-    return (-torch.exp(-t) + ALPHA * torch.pi**2 * torch.exp(-t)) * torch.sin(torch.pi * x)
-
-def initial_condition_fn(x):
-    # u(x, 0) = sin(pi*x)
-    return torch.sin(torch.pi * x)
-
-def boundary_condition_fn(t, x):
-    # u(0, t) = u(1, t) = exp(-t)*sin(0 or pi) = 0
-    return torch.zeros_like(t)
 
 # --- Data Preparation ---
 
 # 1. Interior Data (t in [0, T_max], x in [0, lx_1d])
 x_int, t_int = generate_domain_points(N_INT, bounds_1d, T_max)
-f_tx = source_term_fn(t_int, x_int, ALPHA).to(device)
+f_tx = source_term_fn_1D(t_int, x_int, ALPHA).to(device)
 interior_data = (t_int, x_int, f_tx)
 
 # 2. Initial Condition Data (t = 0, x in [0, lx_1d])
 x_ic = generate_ic_points(N_IC, bounds_1d)
 t_ic = torch.zeros_like(x_ic[:, 0:1]).to(device)
-u_ic = initial_condition_fn(x_ic).to(device)
+u_ic = initial_condition_fn_1D(x_ic).to(device)
 ic_data = (t_ic, x_ic, u_ic)
 
 # 3. Boundary Condition Data (t in [0, T_max], x = 0 or 1)
 x_bc = generate_boundary_points(N_BC, bounds_1d)
 t_bc = torch.rand_like(x_bc[:, 0:1]) * T_max # Sample time for boundary points
-u_bc = boundary_condition_fn(t_bc, x_bc).to(device)
+u_bc = boundary_condition_fn_1D(t_bc, x_bc).to(device)
 bc_data = (t_bc, x_bc, u_bc)
 
 visualize_points_1d(x_int,x_bc, bounds_1d)

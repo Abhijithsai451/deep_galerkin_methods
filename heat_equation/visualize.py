@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 import numpy as np
 import torch.nn as nn
+from matplotlib import cm
 from matplotlib.patches import Patch
 
 from data_sampling import analytical_solution, analytical_solution_2d
@@ -287,7 +288,7 @@ def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: f
     # Legend for combined plot
     ax1.legend(
         handles=[
-            Patch(color='red', alpha=0.8, label='DGM Solution'),
+            Patch(color=cm.viridis(0.7), alpha=0.8, label='DGM Solution'),
             Patch(color='blue', alpha=0.8, label='Analytical Solution')
         ],
         loc='upper right'

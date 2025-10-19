@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 Alpha = 0.5 # Thermal Diffusivity Constant
 
+#%% Loss Functions for Heat Equation
 
 def pde_residual_loss(model, t,x, alpha, f_tx):
-    # Calculates the residual for a time-dependent PDE
+    # Calculates the residual for Heat Equation (Time Dependent)
     t.requires_grad_(True)
     x.requires_grad_(True)
     u = model(t, x)
@@ -45,8 +46,8 @@ def pde_residual_loss_2d(model,t, x,y, alpha, f_txy):
     return residual
 
 def loss_function(  model: nn.Module,
-    # Interior Points
-    t_int: torch.Tensor, x_int: torch.Tensor, source_term_interior: torch.Tensor,
+    # domain Points
+    t_int: torch.Tensor, x_int: torch.Tensor, source_term_domain: torch.Tensor,
     # Initial Condition Points
     t_ic: torch.Tensor, x_ic: torch.Tensor, target_ic: torch.Tensor,
     # Boundary Condition Points
@@ -63,7 +64,7 @@ def loss_function(  model: nn.Module,
     criterion = nn.MSELoss()
 
     # 1. PDE Loss (L_pde): Enforce residual R=0 in the domain
-    R_interior = pde_residual_loss(model, t_int, x_int, alpha, source_term_interior)
+    R_interior = pde_residual_loss(model, t_int, x_int, alpha, source_term_domain)
     L_pde = criterion(R_interior, torch.zeros_like(R_interior))
 
     # 2. Initial Condition Loss (L_ic): Enforce u(x, t=0) = u_IC
@@ -79,7 +80,7 @@ def loss_function(  model: nn.Module,
 
     return L_total, L_pde.item(), L_ic.item(), L_bc.item()
 
-def loss_function_2d(  model: nn.Module,t_int, x_int, y_int, source_term_interior,
+def loss_function_2d(  model: nn.Module,t_int, x_int, y_int, source_term_domain,
                             t_ic, x_ic, y_ic, target_ic,
                             t_bc, x_bc, y_bc, target_bc,
                             alpha,
@@ -88,7 +89,7 @@ def loss_function_2d(  model: nn.Module,t_int, x_int, y_int, source_term_interio
                             lambda_bc=100.0):
     criterion = nn.MSELoss()
     # 1. PDE Loss
-    residual_interior = pde_residual_loss_2d(model,t_int, x_int, y_int, alpha, source_term_interior)
+    residual_interior = pde_residual_loss_2d(model,t_int, x_int, y_int, alpha, source_term_domain)
     L_pde = criterion(residual_interior, torch.zeros_like(residual_interior))
 
     # 2. IC Loss
