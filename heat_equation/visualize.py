@@ -9,7 +9,7 @@ import torch.nn as nn
 from matplotlib import cm
 from matplotlib.patches import Patch
 
-from heat_equation.data_sampling import analytical_solution, analytical_solution_2d
+from heat_equation.utility_functions import analytical_solution, analytical_solution_2d
 
 
 def visualize_points_1d(domain_points:torch.Tensor,
@@ -27,7 +27,7 @@ def visualize_points_1d(domain_points:torch.Tensor,
 
     x_min, x_max = bounds[0]
 
-    # --- 1. Draw the Domain  ---
+    # 1. Plot Domain Points
     plt.plot([x_min, x_max], [0, 0],
              linestyle='-', color='gray', linewidth=3, label='Domain')
 
@@ -129,7 +129,7 @@ def visualize_points_2d(domain_points:torch.Tensor,
     plt.show()
 
 
-def visualize_solution(model: nn.Module, lx_1d: float, t_test: float, n_test_points: int = 500):
+def visualize_solution_1d(model: nn.Module, domain_bound: float, t_test: float, n_test_points: int = 500):
     """
     Generates test points at a fixed time t_test and plots the NN solution vs. Analytical solution.
     """
@@ -138,7 +138,7 @@ def visualize_solution(model: nn.Module, lx_1d: float, t_test: float, n_test_poi
 
     # 1. Generate Test Points
     # Spatial points (x) linearly spaced from 0 to lx_1d
-    x_test_np = np.linspace(0, lx_1d, n_test_points, dtype=np.float32)
+    x_test_np = np.linspace(0, domain_bound, n_test_points, dtype=np.float32)
     x_test = torch.from_numpy(x_test_np).reshape(-1, 1).to(device)
 
     # Time point (t) is fixed
