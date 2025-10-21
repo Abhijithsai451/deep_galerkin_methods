@@ -61,6 +61,8 @@ def generate_bc_points(num_points: int, domain_bound: list)-> torch.Tensor:
         if n_points_face1 >0:
             face_points1 = torch.rand(n_points_face1, num_dims)
 
+            face_points1[:, dim_idx] = min_val
+
             for other_dim_idx in range(num_dims):
                 if other_dim_idx != dim_idx:
                     min_o, max_o = domain_bound[other_dim_idx]

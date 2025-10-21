@@ -77,14 +77,14 @@ class DGMTrainer_2D:
         self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         self.model.to(self.device)
     def train(self,epochs:int,
-              interior_data:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
+              domain_data:Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
               ic_data:Tuple[torch.Tensor, torch.Tensor, torch.Tensor,torch.Tensor],
               bc_data:Tuple[torch.Tensor, torch.Tensor, torch.Tensor,torch.Tensor],
               lambda_ic:float = 100.0,
               lambda_bc:float = 100.0):
         self.model.train()
 
-        t_int, x_int, y_int, f_txy = (d.to(self.device) for d in interior_data)
+        t_int, x_int, y_int, f_txy = (d.to(self.device) for d in domain_data)
 
         t_ic, x_ic, y_ic, u_ic = (d.to(self.device) for d in ic_data)
 

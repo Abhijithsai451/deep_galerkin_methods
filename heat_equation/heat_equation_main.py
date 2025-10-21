@@ -14,9 +14,9 @@ ALPHA = 0.01
 PDE_CONSTANTS = {'alpha': ALPHA}
 
 # Data Sizes
-N_INT = 1500
-N_IC = 400
-N_BC =400
+N_INT = 500
+N_IC = 200
+N_BC =200
 
 
 # --- Data Preparation ---
@@ -56,14 +56,14 @@ trainer = DGMTrainer(
 
 trainer.train(
     epochs=epochs,
-    interior_data=interior_data,
+    domain_data=interior_data,
     ic_data=ic_data,
     bc_data=bc_data,
     lambda_ic=50.0,
     lambda_bc=50.0
 )
 t_test_time = 2
-visualize_solution(
+visualize_solution_1d(
     model=model,
     lx_1d=lx_1d,
     t_test=t_test_time,
@@ -82,9 +82,9 @@ ALPHA = 0.01
 PDE_CONSTANTS = {'alpha': ALPHA}
 
 # Data Sizes
-N_INT = 2500
-N_IC = 400
-N_BC =400
+N_INT = 800
+N_IC = 250
+N_BC =250
 
 # Generate points using the corrected method (i_points_2d is a tuple, we take the 0th element)
 # --- Data Preparation ---
@@ -131,7 +131,7 @@ trainer = DGMTrainer_2D(
 
 trainer.train(
     epochs=epochs,
-    interior_data=interior_data,
+    domain_data=interior_data,
     ic_data=ic_data,
     bc_data=bc_data,
     lambda_ic=50.0,
