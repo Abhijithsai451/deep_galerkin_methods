@@ -65,7 +65,7 @@ def visualize_solution_1d(model: nn.Module, domain_bound: float, n_test_points: 
     device = next(model.parameters()).device
 
     # 1. Generate test Points
-    x_test_np = np.linspace(0, domain_bound, n_test_points, dtype=torch.float32)
+    x_test_np = np.linspace(0, domain_bound, n_test_points, dtype= np.float32)
     x_test = torch.from_numpy(x_test_np).reshape(-1, 1).to(device)
 
     # 2. Calculate the Neural Network Solution
