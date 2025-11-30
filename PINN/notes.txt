@@ -1,0 +1,28 @@
+------------------------------------------------------------------------------------------------------------------------
+Physics Informed Neural Networks - Implementation Plan
+------------------------------------------------------------------------------------------------------------------------
+1. Install the dependencies.
+2. Neural Network Architecture:
+    The Core of the PINN is the neural network, which acts as the solution u'(x,t,ø)
+    Define the Input: the network must accept the independent variables x and t (input size 2)
+    Design the Model Class: We create a python class (PINN_Model) which inherits from torch.nn.Module.
+        Architecture: We start with a simple MLP
+            Layers: 4 - 6 Fully connected layers
+            Neurons: 20 to 50 Neurons per layer.
+            Activation: Typically tanh or SiLU (swish) for PINNs, as they perform better than ReLU for derivatives.
+            Output Size: 1 (predicted temperature u)
+3. Physics Loss Function:
+    The Most crucial and unique part of PINNs. It enforces the PDE on the solution.
+    Implement the Derivative Function : We create a helper function (or a method within your model class) to calculate the
+    derivatives of the network output u with respect to the inputs x and t.
+    We use pytorch function for Autograd
+    Define the PDE Residual:
+    Calculate the Physics Loss
+4. Data Generation
+    Boundary Condition Points
+    Initial Condition Points
+    Collocation Points
+5. Total Loss Function
+6. Training Loop
+7. Evaluation and Visualization
+
