@@ -25,7 +25,6 @@ domain_data = (x_int, f_x)
 
 # 2 Boundary Points
 c_bc = generate_bc_points(N_BC, bounds_1d)
-#print("Boundary points ",c_bc)
 u_bc = boundary_condition_fn_1D(c_bc).to(device)
 bc_data = (c_bc, u_bc)
 
@@ -35,7 +34,7 @@ visualize_points_1d(x_int,c_bc, bounds_1d)
 num_layers = 5
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 5000
+epochs = 200
 
 model = network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
 
@@ -53,3 +52,68 @@ trainer.train(
 )
 
 visualize_solution_1d(model, lx_1d,n_test_points=500)
+
+
+#%% Deep Galerkin Method with Poisson Equation in 2D
+lx_2d = 2.0
+ly_2d = 2.0
+T_max = 2.0
+bounds_2d = [[0.0, lx_2d],[0.0, ly_2d]]
+
+# PDE Constants (for Heat Equation: u_t = alpha * u_xx + f)
+ALPHA = 0.01
+
+# Data Sizes
+N_INT = 2000
+N_BC =800
+
+# Generate points using the corrected method (i_points_2d is a tuple, we take the 0th element)
+# --- Data Preparation ---
+
+# 1. Interior Data (t in [0, T_max], x in [0, lx_1d])
+spatial_coords = generate_domain_points(N_INT, bounds_2d)
+x_int = spatial_coords[:, 0:1]
+y_int = spatial_coords[:, 1:2]
+f_xy = source_term_fn_2d(x_int, y_int).to(device)
+interior_data = (x_int, y_int,  f_xy)
+
+
+# 2. Boundary Condition Data (t in [0, T_max], x = 0 or 1)
+spatial_coords_bc = generate_bc_points(N_BC, bounds_2d)
+x_bc = spatial_coords_bc[:, 0:1]
+y_bc = spatial_coords_bc[:, 1:2]
+u_bc = boundary_condition_fn_2d(x_bc, y_bc).to(device)
+bc_data = (x_bc,y_bc, u_bc)
+
+
+visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
+
+# --- Network Initialization and Training ---
+num_layers = 6
+nodes_per_layer = 64
+learning_rate = 0.001
+epochs = 600
+
+model = network.DGMNet(nodes_per_layer, num_layers, 2).to(device)
+
+trainer = DGMTrainerPE_2D(
+    model=model,
+    learning_rate=learning_rate
+)
+trainer.train(
+    epochs=epochs,
+    domain_data=interior_data,
+    bc_data=bc_data,
+    lambda_pde=5.0,
+    lambda_bc=5.0
+)
+visualize_2d(
+    model=model,
+    bounds=bounds_2d,
+    n_grid=500
+)
+visualize_solution_2d(
+    model=model,
+    bounds=bounds_2d,
+    n_grid=500
+)

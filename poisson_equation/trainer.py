@@ -60,7 +60,6 @@ class DGMTrainerPE_2D:
 
     def train(self, epochs: int,
               domain_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
-              ic_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
               bc_data: Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
               lambda_pde: float = 100.0,
               lambda_bc: float = 100.0
@@ -68,9 +67,9 @@ class DGMTrainerPE_2D:
         self.model.train()
 
         # Unpack the data and move to device for training
-        t_int, x_int, y_int, f_xy = (d.to(self.device) for d in domain_data)
-        t_ic , x_ic, y_ic = (d.to(self.device) for d in ic_data)
-        t_bc, x_bc, y_bc, f_bc = (d.to(self.device) for d in bc_data)
+        x_int, y_int, f_xy = (d.to(self.device) for d in domain_data)
+        #t_ic , x_ic, y_ic = (d.to(self.device) for d in ic_data)
+        x_bc, y_bc, f_bc = (d.to(self.device) for d in bc_data)
 
 
         for epoch in range(epochs):
@@ -81,9 +80,10 @@ class DGMTrainerPE_2D:
                                                           lambda_bc=lambda_bc)
             total_loss.backward()
             self.optimizer.step()
-
-            print(f"Epoch {epoch + 1}/{epochs} | Total Loss: {total_loss.item():.4f} "
-                  f"| L_pde: {pde_loss:.4f} | L_bc: {bc_loss:.4f}")
+            # logging
+            if (epoch + 1) % 100 == 0:
+                print(f"Epoch {epoch + 1}/{epochs} | Total Loss: {total_loss.item():.4f} "
+                      f"| L_pde: {pde_loss:.4f} | L_bc: {bc_loss:.4f}")
 
 
 

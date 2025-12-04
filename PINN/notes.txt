@@ -84,4 +84,18 @@ DGM can be seen as a specific implementation of the PINN approach. PINNs are a m
 References
 ------------------------------------------------------------------------------------------------------------------------
 
-Network Architecture: (DGM) -> https://github.com/alialaradi/DeepGalerkinMethod
+Network Architecture: [DGM] -> https://github.com/alialaradi/DeepGalerkinMethod
+PINNS: [Architecture and Examples] -> https://github.com/PredictiveIntelligenceLab/jaxpi/tree/main
+More Resources: https://github.com/PredictiveIntelligenceLab/jaxpi
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+Cell Migration - Use Case
+------------------------------------------------------------------------------------------------------------------------
+
+Dataset: https://github.com/DomiLerm/CellMigrationTool
+Migration-Assay-Analysi-Macro - https://github.com/schmikev/Migration-Assay-Analysis-Macro
+Virtually Objective Quantification of in vitro Wound Healing Scratch Assays : https://arxiv.org/pdf/2407.02187
+SAM-webui: https://github.com/derekray311511/SAM-webui

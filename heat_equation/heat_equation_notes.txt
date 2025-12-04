@@ -1,0 +1,96 @@
+------------------------------------------------------------------------------------------------------------------------
+The Heat Equation
+------------------------------------------------------------------------------------------------------------------------
+The heat equation is a parabolic partial differential equation that describes how temperature changes over time in a
+    given region. The general form of the heat equation is:
+    - u_t = alpha * (u_xx + u_yy + u_zz) + f
+
+Where:
+    - `u(t, x, y, z)` is the temperature at a point `(x, y, z)` at time . `t`
+    - u_t is the rate of change of temperature with respect to time.
+    - , u_xx, u_yy, u_zz` are the second spatial derivatives of temperature with respect to x, y, and `z`, respectively.
+        These represent the diffusion of heat in each spatial dimension.
+    - alpha is the thermal diffusivity, a material property that determines how quickly heat spreads.
+    - `f(t, x, y, z)` is a source term that represents the generation or absorption of heat within the region.
+
+------------------------------------------------------------------------------------------------------------------------
+Deep Galerkin Method (DGM)
+------------------------------------------------------------------------------------------------------------------------
+DGM is a numerical technique for solving PDEs using deep neural networks. The main idea is to approximate the solution
+     'u' with a neural network and train the network to satisfy the PDE, initial conditions (IC), and boundary conditions
+    (BC).
+Code Explanation
+We focus on the 1D and 2D implementations in the provided code.
+1. Key Variables and Functions
+    - `u(t, x)` or `u(t, x, y)`: This is the approximate solution to the heat equation, represented by the neural
+        network (network.DGMNet). The network takes time 't' and spatial coordinates 'x' (1D) or `(x, y)` (2D) as input
+        and outputs the predicted temperature 'u'.
+    - `t` Represents time. In the code `t_int``t_ic``t_bc` are used for the time values at the interior domain, initial
+        condition, and boundary condition points, respectively.
+    -  x and y Represent the spatial coordinates.`x_int``x_ic``x_bc` are the x-coordinates at the interior, initial condition,
+        and boundary condition points. Similarly `y_int``y_ic``y_bc` represent the y-coordinates in the 2D case.
+
+    - **:`u_t`** The time derivative of the approximate solution . This is calculated using automatic differentiation
+        in the and functions from . Specifically, `torch.autograd.grad(u, t, ...)` computes this derivative.
+        `u``pde_residual_loss``pde_residual_loss_2d``loss.py`
+    - **:`u_xx`** The second spatial derivative of the approximate solution with respect to . Calculated similarly to
+        using automatic differentiation. `torch.autograd.grad(u_x, x, ...)` computes this derivative in .
+        `u``x``u_t``loss.py`
+    - **:`u_yy`** The second spatial derivative of the approximate solution with respect to . Calculated similarly to
+        using automatic differentiation. `torch.autograd.grad(u_y, y, ...)` computes this derivative in .
+        `u``y``u_t``loss.py`
+    - **`f(t, x)` or `f(t, x, y)`:** The source term in the heat equation. These are defined by the functions and in .
+        These functions calculate the value of the source term at a given time and spatial location. In , and store the
+        source term values calculated at the interior points. `source_term_fn_1D``source_term_fn_2D``utility_functions.py
+        ``heat_equation_main.py``f_tx``f_txy`
+    - **:`alpha`** The thermal diffusivity constant. It's defined in as and passed to the source term functions.
+        `heat_equation_main.py``ALPHA`
+    - **and `initial_condition_fn_2D(x, y)`:`initial_condition_fn_1D(x)`** These functions define the initial temperature
+        distribution at time . They are used to generate the target values () for the initial condition data. `t = 0``u_ic`
+    - **and `boundary_condition_fn_2D(t, x, y)`:`boundary_condition_fn_1D(t, x)`** These functions define the temperature
+        at the boundaries of the spatial domain. They are used to generate the target values () for the boundary
+        condition data. `u_bc`
+    - **`pde_residual_loss(model, t, x, alpha, f_tx)` and `pde_residual_loss_2d(model, t, x, y, alpha, f_txy)`:** These
+        functions calculate the residual of the heat equation, which is `u_t - alpha * u_xx - f` in 1D and
+        `u_t - alpha * (u_xx + u_yy) - f` in 2D. The goal is to minimize this residual during training, so the neural
+        network satisfies the PDE.
+    - **`loss_function(...)` and `loss_function_2d(...)`:** These functions calculate the total loss, which is a weighted
+        sum of the PDE loss (residual), initial condition loss, and boundary condition loss. The weights and control
+         the importance of satisfying the initial and boundary conditions relative to the PDE. `lambda_ic``lambda_bc`
+    - **:`generate_domain_points(N_INT, bounds_1d, T_max)`** Generates random points within the spatial and temporal
+        domain where the PDE must be satisfied.
+    - **:`generate_ic_points(N_IC, bounds_1d)`** Generates random points on the initial condition surface (t=0)
+    - **:`generate_boundary_points(N_BC, bounds_1d)`** Generates random points on the spatial boundary of the domain.
+
+------------------------------------------------------------------------------------------------------------------------
+2. Training Process
+------------------------------------------------------------------------------------------------------------------------
+The and classes in handle the training of the neural network. `DGMTrainer``DGMTrainer_2D``trainer.py`
+- The method in these classes performs the following steps:
+    1. **Data Preparation:** Sample points from the interior domain, initial condition, and boundary conditions using the
+    functions in . `data_sampling.py`
+    2. **Loss Calculation:** Calculate the total loss using the or in . This involves:
+        - Calculating the PDE residual using or . `pde_residual_loss``pde_residual_loss_2d`
+        - Calculating the initial condition loss by comparing the network's output at with the values given by or .
+        `t=0``initial_condition_fn_1D``initial_condition_fn_2D`
+        - Calculating the boundary condition loss by comparing the network's output at the boundaries with the values
+        given by or . `boundary_condition_fn_1D``boundary_condition_fn_2D`
+
+`loss_function``loss_function_2d``loss.py`
+    3. **Optimization:** Use an optimizer (Adam) to update the network's weights to minimize the total loss. This is
+    done using backpropagation () and the optimizer's method. `total_loss.backward()``step()`
+
+`train`
+
+------------------------------------------------------------------------------------------------------------------------
+3. Visualization
+------------------------------------------------------------------------------------------------------------------------
+The file contains functions for visualizing the solution: `visualize.py`
+- and plot the neural network's solution against the analytical solution (if available) to assess the accuracy of the
+DGM method. They also plot the absolute error. `visualize_solution_1d``visualize_solution_2d`
+
+------------------------------------------------------------------------------------------------------------------------
+In Summary
+------------------------------------------------------------------------------------------------------------------------
+The code implements the Deep Galerkin Method to solve the heat equation. It approximates the solution with a neural
+network and trains the network to satisfy the PDE, initial condition, and boundary conditions. The key functions define the source term, initial condition, and boundary conditions, calculate the PDE residual and total loss, and generate the training data. The visualization functions help to assess the accuracy of the solution

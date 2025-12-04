@@ -71,7 +71,7 @@ def loss_function_2d(model:nn.Module,
                      source_term_domain: torch.Tensor,
                      x_bc: torch.Tensor,
                      y_bc: torch.Tensor,
-                     alpha: float = 1.0,
+                     source_term_bc: torch.Tensor,
                      lambda_pde: float = 1.0,
                      lambda_bc: float = 100.0):
 
@@ -83,7 +83,7 @@ def loss_function_2d(model:nn.Module,
 
     # 2. BC loss
     u_predicted_bc = model(torch.cat([x_bc, y_bc],1))
-    L_bc = criterion(u_predicted_bc, torch.zeros_like(u_predicted_bc))
+    L_bc = criterion(u_predicted_bc, source_term_bc)
 
     L_total = (lambda_pde * L_pde) + (lambda_bc * L_bc)
 

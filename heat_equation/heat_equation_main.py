@@ -44,8 +44,7 @@ visualize_points_1d(x_int,x_bc, bounds_1d)
 num_layers = 5
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 5000
-
+epochs = 500
 model = network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
 
 trainer = DGMTrainer(
@@ -65,10 +64,11 @@ trainer.train(
 t_test_time = 2
 visualize_solution_1d(
     model=model,
-    lx_1d=lx_1d,
+    domain_bound=lx_1d,
     t_test=t_test_time,
     n_test_points=500
 )
+print("Finished Training for Heat Equation in 1D \n\n")
 
 #%% Deep Galerkin Method in 2D
 
@@ -119,7 +119,7 @@ visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
 num_layers = 6
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 6000
+epochs = 600
 
 model = network.DGMNet(nodes_per_layer, num_layers, 2).to(device)
 
@@ -150,3 +150,4 @@ visualize_solution_2d(
     t_test=t_test_time,
     n_grid=500
 )
+print("Finished Training for Heat Equation Time Dependent in 2D \n\n")

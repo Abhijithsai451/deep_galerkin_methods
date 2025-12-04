@@ -29,7 +29,7 @@ def analytical_function_1d(x)-> torch.Tensor:
     return torch.sin(torch.pi * x)
 
 
-#%% All the Source and Boundary condition functions in 1D
+#%% All the Source and Boundary condition functions in 2D
 
 def source_term_fn_2d(x,y)-> torch.Tensor:
     """
