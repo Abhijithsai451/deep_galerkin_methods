@@ -3,7 +3,7 @@ import torch
 #%% All the source, boundary and initial condition functions in 1D
 # Example for u(x, t) = exp(-t) * sin(pi*x)
 def source_term_fn_1D(t, x, alpha):
-    # f(t,x) = u_t - alpha*u_xx (plug known solution into PDE)
+    # u(x,t) = u_t - alpha*u_xx (plug known solution into PDE)
     # u_t = -exp(-t)*sin(pi*x)
     # u_xx = -pi^2 * exp(-t) * sin(pi*x)
     return (-torch.exp(-t) + alpha * torch.pi**2 * torch.exp(-t)) * torch.sin(torch.pi * x)
