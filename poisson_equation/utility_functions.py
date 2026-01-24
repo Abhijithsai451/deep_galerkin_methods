@@ -51,8 +51,24 @@ def boundary_condition_fn_2d(x,y)-> torch.Tensor:
 
 def analytical_function_2d(x,y)-> torch.Tensor:
     """
-    Calculates the Analytical Function for Poisson's Equation in 1D.
+    Calculates the Analytical Function for Poisson's Equation in 2D.
     Analytical function is 'sin(πx) * sin(πy)'
     """
     f = torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
     return f
+
+def calculate_relative_l2_error(model, x, analytical_fn):
+    model.eval()
+    with torch.no_grad():
+        u_pred = model(x)
+        u_true = analytical_fn(x)
+        error = torch.norm(u_true - u_pred, 2) / torch.norm(u_true, 2)
+    return error.item()
+
+def calculate_relative_l2_error_2d(model, x, y, analytical_fn):
+    model.eval()
+    with torch.no_grad():
+        u_pred = model(torch.cat([x, y], 1))
+        u_true = analytical_fn(x, y)
+        error = torch.norm(u_true - u_pred, 2) / torch.norm(u_true, 2)
+    return error.item()

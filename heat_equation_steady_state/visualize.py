@@ -57,6 +57,20 @@ def visualize_points_1d(domain_points: torch.Tensor,
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3)
     plt.show()
 
+def visualize_loss(trainer, title="Training Loss History"):
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(10, 6))
+    plt.plot(trainer.loss_history, label='Total Loss')
+    plt.plot(trainer.pde_loss_history, label='PDE Loss')
+    plt.plot(trainer.bc_loss_history, label='BC Loss')
+    plt.yscale('log')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title(title)
+    plt.legend()
+    plt.grid(True, which="both", ls="-", alpha=0.5)
+    plt.show()
+
 def visualize_solution_1d(model: nn.Module, domain_bound: float, n_test_points: int = 500):
     """
     Generates the test points and Plots the NN solution vs Analytical solution.

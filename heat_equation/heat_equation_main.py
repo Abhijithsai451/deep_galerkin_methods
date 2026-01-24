@@ -1,8 +1,23 @@
 import network
+import torch
+import numpy as np
+import random
+
 from trainer import DGMTrainer, DGMTrainer_2D
 from visualize import *
 from heat_equation.data_sampling import *
 from utility_functions import *
+
+def set_seed(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+set_seed(42)
+
+
 #%% Deep Galerkin Method in 1D
 
 lx_1d = 2.0
@@ -38,13 +53,13 @@ t_bc = torch.rand_like(x_bc[:, 0:1]) * T_max # Sample time for boundary points
 u_bc = boundary_condition_fn_1D(t_bc, x_bc).to(device)
 bc_data = (t_bc, x_bc, u_bc)
 
-visualize_points_1d(x_int,x_bc, bounds_1d)
+#visualize_points_1d(x_int,x_bc, bounds_1d)
 
 # --- Network Initialization and Training ---
 num_layers = 5
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 500
+epochs = 3000
 model = network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
 
 trainer = DGMTrainer(
@@ -59,8 +74,17 @@ trainer.train(
     ic_data=ic_data,
     bc_data=bc_data,
     lambda_ic=50.0,
-    lambda_bc=50.0
+    lambda_bc=50.0,
+    resample=True,
+    sampling_config={
+        'n_int': N_INT,
+        'n_ic': N_IC,
+        'n_bc': N_BC,
+        'bounds': bounds_1d,
+        't_max': T_max
+    }
 )
+visualize_loss(trainer, title="Training Loss History - Heat Equation 1D")
 t_test_time = 2
 visualize_solution_1d(
     model=model,
@@ -113,13 +137,13 @@ u_bc = boundary_condition_fn_2D(t_bc, x_bc, y_bc).to(device)
 bc_data = (t_bc, x_bc,y_bc, u_bc)
 
 
-visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
+#visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
 
 # --- Network Initialization and Training ---
 num_layers = 6
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 600
+epochs = 6000
 
 model = network.DGMNet(nodes_per_layer, num_layers, 2).to(device)
 
@@ -135,9 +159,18 @@ trainer.train(
     ic_data=ic_data,
     bc_data=bc_data,
     lambda_ic=50.0,
-    lambda_bc=50.0
+    lambda_bc=50.0,
+    resample=True,
+    sampling_config={
+        'n_int': N_INT,
+        'n_ic': N_IC,
+        'n_bc': N_BC,
+        'bounds': bounds_2d,
+        't_max': T_max
+    }
 )
-t_test_time = 0.05
+visualize_loss(trainer, title="Training Loss History - Heat Equation 2D")
+t_test_time = 1.00
 visualize_2d(
     model=model,
     bounds=bounds_2d,

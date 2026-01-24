@@ -129,6 +129,21 @@ def visualize_points_2d(domain_points:torch.Tensor,
     plt.show()
 
 
+def visualize_loss(trainer, title="Training Loss History"):
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(10, 6))
+    plt.plot(trainer.loss_history, label='Total Loss')
+    plt.plot(trainer.pde_loss_history, label='PDE Loss')
+    plt.plot(trainer.ic_loss_history, label='IC Loss')
+    plt.plot(trainer.bc_loss_history, label='BC Loss')
+    plt.yscale('log')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title(title)
+    plt.legend()
+    plt.grid(True, which="both", ls="-", alpha=0.5)
+    plt.show()
+
 def visualize_solution_1d(model: nn.Module, domain_bound: float, t_test: float, n_test_points: int = 500):
     """
     Generates test points at a fixed time t_test and plots the NN solution vs. Analytical solution.
@@ -232,8 +247,8 @@ def visualize_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_g
 
     ax2 = axes[1]
 
-    eror_vmax = error_np.max()
-    contour2 = ax2.contourf(X, Y, error_np, levels=50, cmap='Reds', vmax=eror_vmax, extend='max')
+    error_vmax = error_np.max()
+    contour2 = ax2.contourf(X, Y, error_np, levels=50, cmap='Reds', vmax=error_vmax, extend='max')
     cbar = fig.colorbar(contour2, ax=ax2, format = '%.1e',label='Absolute Error $|u_{NN} - u_{exact}|$')
     ax2.set_xlabel('$x$', fontsize=12)
     ax2.set_ylabel('$y$', fontsize=12)

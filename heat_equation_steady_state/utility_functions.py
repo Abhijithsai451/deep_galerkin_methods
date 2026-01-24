@@ -42,3 +42,19 @@ def analytical_function_2d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     Analytical solution of the 2D heat equation with homogeneous Dirichlet boundary conditions.
     """
     return torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
+
+def calculate_relative_l2_error(model, x, analytical_fn):
+    model.eval()
+    with torch.no_grad():
+        u_pred = model(x)
+        u_true = analytical_fn(x)
+        error = torch.norm(u_true - u_pred, 2) / torch.norm(u_true, 2)
+    return error.item()
+
+def calculate_relative_l2_error_2d(model, x, y, analytical_fn):
+    model.eval()
+    with torch.no_grad():
+        u_pred = model(torch.cat([x, y], 1))
+        u_true = analytical_fn(x, y)
+        error = torch.norm(u_true - u_pred, 2) / torch.norm(u_true, 2)
+    return error.item()

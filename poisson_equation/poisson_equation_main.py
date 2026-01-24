@@ -1,9 +1,21 @@
-import network
+import torch
+import numpy as np
+import random
 from poisson_equation.trainer import DGMTrainerPE, DGMTrainerPE_2D
 from poisson_equation.utility_functions import *
 from poisson_equation.data_sampling import *
 import poisson_equation_network as network
 from poisson_equation.visualize import *
+
+def set_seed(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+set_seed(42)
+
 #%%  Deep Galerkin Method with Poisson Equation in 1D
 
 lx_1d = 2.0
@@ -48,9 +60,15 @@ trainer.train(
     domain_data=domain_data,
     bc_data=bc_data,
     lambda_pde=50.0,
-    lambda_bc=50.0
+    lambda_bc=50.0,
+    resample=True,
+    sampling_config={
+        'n_int': N_INT,
+        'n_bc': N_BC,
+        'bounds': bounds_1d
+    }
 )
-
+visualize_loss(trainer, title="Training Loss History - Poisson Equation 1D")
 visualize_solution_1d(model, lx_1d,n_test_points=500)
 
 
@@ -102,8 +120,15 @@ trainer.train(
     domain_data=interior_data,
     bc_data=bc_data,
     lambda_pde=5.0,
-    lambda_bc=5.0
+    lambda_bc=5.0,
+    resample=True,
+    sampling_config={
+        'n_int': N_INT,
+        'n_bc': N_BC,
+        'bounds': bounds_2d
+    }
 )
+visualize_loss(trainer, title="Training Loss History - Poisson Equation 2D")
 visualize_2d(
     model=model,
     bounds=bounds_2d,

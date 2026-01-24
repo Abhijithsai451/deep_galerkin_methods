@@ -1,8 +1,20 @@
+import torch
+import numpy as np
+import random
 from heat_equation_steady_state.trainer import *
 from heat_equation_steady_state.data_sampling import *
 from heat_equation_steady_state.visualize import *
 from heat_equation_steady_state.utility_functions import *
 import heat_equation_steady_state_network as network
+
+def set_seed(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+set_seed(42)
 
 #%% Deep Galerkin Method with Steady Heat Equation in 1D
 
@@ -39,7 +51,8 @@ model = network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
 
 trainer = DGMTrainerSS(
     model=model,
-    learning_rate=learning_rate
+    learning_rate=learning_rate,
+    alpha=alpha
 )
 
 trainer.train(
@@ -48,7 +61,14 @@ trainer.train(
     bc_data=bc_data,
     lambda_pde=500.0,
     lambda_bc=500.0,
+    resample=True,
+    sampling_config={
+        'n_int': N_INT,
+        'n_bc': N_BC,
+        'bounds': bounds_1d
+    }
 )
+visualize_loss(trainer, title="Training Loss History - Steady-State Heat Equation 1D")
 visualize_solution_1d(model, lx_1d,n_test_points=500)
 
 #%% Deep Galerkin Method with Steady Heat Equation in 2D
@@ -95,15 +115,23 @@ model = network.DGMNet(nodes_per_layer, num_layers, 2).to(device)
 
 trainer = DGMTrainerSS_2D(
     model=model,
-    learning_rate=learning_rate
+    learning_rate=learning_rate,
+    alpha=ALPHA
 )
 trainer.train(
     epochs=epochs,
     domain_data=interior_data,
     bc_data=bc_data,
     lambda_pde=500.0,
-    lambda_bc=500.0
+    lambda_bc=500.0,
+    resample=True,
+    sampling_config={
+        'n_int': N_INT,
+        'n_bc': N_BC,
+        'bounds': bounds_2d
+    }
 )
+visualize_loss(trainer, title="Training Loss History - Steady-State Heat Equation 2D")
 visualize_2d(
     model=model,
     bounds=bounds_2d,

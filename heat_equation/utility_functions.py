@@ -49,7 +49,7 @@ def boundary_condition_fn_2D(t, x, y ):
 
 def analytical_solution_2d(t: torch.Tensor, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """
-        The known analytical solution for the 1D Heat Equation example: u(x, t) = exp(-t) * sin(pi*x)
+        The known analytical solution for the 2D Heat Equation example: u(x, y, t) = exp(-t) * sin(pi*x) * sin(pi*y)
     """
     # Ensuring all the imputs are tensors and on the correct device for multiplication
     if not isinstance(t, torch.Tensor):
@@ -59,6 +59,22 @@ def analytical_solution_2d(t: torch.Tensor, x: torch.Tensor, y: torch.Tensor) ->
     if t.dim() == 1:
         t = t.reshape(-1, 1)
     return torch.exp(-t) * torch.sin(torch.pi * x) * torch.sin(torch.pi * y)
+
+def calculate_relative_l2_error(model, t, x, analytical_fn):
+    model.eval()
+    with torch.no_grad():
+        u_pred = model(t, x)
+        u_true = analytical_fn(t, x)
+        error = torch.norm(u_true - u_pred, 2) / torch.norm(u_true, 2)
+    return error.item()
+
+def calculate_relative_l2_error_2d(model, t, x, y, analytical_fn):
+    model.eval()
+    with torch.no_grad():
+        u_pred = model(t, torch.cat([x, y], 1))
+        u_true = analytical_fn(t, x, y)
+        error = torch.norm(u_true - u_pred, 2) / torch.norm(u_true, 2)
+    return error.item()
 
 
 #%%
