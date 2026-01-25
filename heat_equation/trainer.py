@@ -3,10 +3,10 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from heat_equation.loss import loss_function, loss_function_2d
-from heat_equation.data_sampling import generate_domain_points, generate_ic_points, generate_boundary_points
-from heat_equation.utility_functions import source_term_fn_2D, initial_condition_fn_2D, boundary_condition_fn_2D
-from heat_equation.utility_functions import source_term_fn_1D, initial_condition_fn_1D, boundary_condition_fn_1D
+from loss import loss_function, loss_function_2d
+from data_sampling import generate_domain_points, generate_ic_points, generate_boundary_points
+from utility_functions import source_term_fn_2D, initial_condition_fn_2D, boundary_condition_fn_2D
+from utility_functions import source_term_fn_1D, initial_condition_fn_1D, boundary_condition_fn_1D
 
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 

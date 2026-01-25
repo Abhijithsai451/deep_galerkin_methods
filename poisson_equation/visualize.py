@@ -279,50 +279,28 @@ def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], n_grid: i
     v_min = min(u_nn_np.min(), u_exact_np.min()) * 1.05
 
     # 3. Plotting the graphs
-    fig = plt.figure(figsize=(20,16))
-    ax1 = plt.subplot2grid((2,2),(0,0),colspan=2, projection='3d')
-    ax2 = plt.subplot2grid((2, 2), (1, 0),  projection='3d')
-    ax3 = plt.subplot2grid((2, 2), (1, 1),projection='3d')
+    fig = plt.figure(figsize=(20, 8))
+    ax2 = plt.subplot2grid((1, 2), (0, 0), projection='3d')
+    ax3 = plt.subplot2grid((1, 2), (0, 1), projection='3d')
 
-    # Plot 1: Analytica vs DGM Solution
-    surf_dgm_top = ax1.plot_surface(X, Y, u_nn_np, cmap='viridis',edgecolor='none', alpha=0.9)
-    surf_exact_top = ax1.plot_wireframe(X, Y, u_exact_np, color= 'blue', linewidth=1.0, rstride=5, cstride=5)
-    # Legend for combined plot
-    ax1.legend(
-        handles=[
-            Patch(color=cm.viridis(0.7), alpha=0.8, label='DGM Solution'),
-            Patch(color='blue', alpha=0.8, label='Analytical Solution')
-        ],
-        loc='upper right'
-    )
-    ax1.set_title(f'Combined DGM Solution vs Analytical Solution', fontsize=16)
-    ax1.set_xlabel('$x$')
-    ax1.set_ylabel('$y$')
-    ax1.set_zlabel('$u(x, y, t)$')
-    ax1.set_zlim(v_min, v_max)
-    ax1.view_init(elev=30, azim=45)
-    # Add one colorbar for the DGM solution on the combined plot
-    cbar_ax1 = fig.add_axes([ax1.get_position().x1 + 0.01, ax1.get_position().y0, 0.02, ax1.get_position().height])
-    fig.colorbar(surf_dgm_top, cax=cbar_ax1, label='$u_{NN}(x, y, t)$')
-
-    # Plot 2 (bottom left) - Analytical solution
-    surf2 = ax2.plot_surface(X, Y, u_exact_np, cmap='plasma',edgecolor='none', alpha=0.9)
-    ax2.set_title('Bottom-Left: Analytical Solution (Reference)', fontsize=14)
+    # Plot 1 - Analytical solution
+    surf2 = ax2.plot_surface(X, Y, u_exact_np, cmap='plasma', edgecolor='none', alpha=0.9)
+    ax2.set_title('Analytical Solution', fontsize=14)
     ax2.set_xlabel('X')
     ax2.set_ylabel('Y')
     ax2.set_zlabel('u')
     ax2.set_zlim(v_min, v_max)
     ax2.view_init(elev=30, azim=45)
 
-    # Plot 3 (Bottom Right) - DGM Solution
+    # Plot 2 - DGM Solution
     surf3 = ax3.plot_surface(X, Y, u_nn_np, cmap='viridis', edgecolor='none', alpha=0.9)
-    ax3.set_title('Bottom-Right: DGM Solution (Reference)', fontsize=14)
+    ax3.set_title('DGM Solution', fontsize=14)
     ax3.set_xlabel('X')
     ax3.set_ylabel('Y')
     ax3.set_zlabel('u')
     ax3.set_zlim(v_min, v_max)
     ax3.view_init(elev=30, azim=45)
 
-    fig.suptitle(f'DGM Solution vs Analytical Solution ', fontsize=20, y = 0.98)
+    fig.suptitle(f'DGM Solution vs Analytical Solution', fontsize=20, y=0.98)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()

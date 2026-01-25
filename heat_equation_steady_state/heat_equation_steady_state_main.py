@@ -39,13 +39,13 @@ domain_data = (x_int, f_x)
 c_bc = generate_bc_points(N_BC, bounds_1d)
 u_bc = boundary_condition_fn_1D(c_bc).to(device)
 bc_data = (c_bc, u_bc)
-visualize_points_1d(x_int,c_bc, bounds_1d)
+#visualize_points_1d(x_int,c_bc, bounds_1d)
 
 # Network Initialization and Training
 num_layers = 5
 nodes_per_layer = 64
 learning_rate = 0.001
-epochs = 1000
+epochs = 2000
 
 model = network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
 
@@ -103,7 +103,7 @@ u_bc = boundary_condition_fn_2D(x_bc, y_bc).to(device)
 bc_data = (x_bc,y_bc, u_bc)
 
 
-visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
+#visualize_points_2d(spatial_coords, spatial_coords_bc, bounds_2d)
 
 # --- Network Initialization and Training ---
 num_layers = 6

@@ -3,7 +3,10 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from heat_equation_steady_state.loss import loss_function, loss_function_2d
+from loss import loss_function, loss_function_2d
+from utility_functions import source_term_fn_1D, boundary_condition_fn_1D
+from data_sampling import generate_domain_points, generate_bc_points
+from utility_functions import source_term_fn_2D, boundary_condition_fn_2D
 
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
@@ -41,8 +44,6 @@ class DGMTrainerSS:
 
         for epoch in range(epochs):
             if resample and sampling_config:
-                from heat_equation_steady_state.data_sampling import generate_domain_points, generate_bc_points
-                from heat_equation_steady_state.utility_functions import source_term_fn_1D, boundary_condition_fn_1D
 
                 n_int = sampling_config.get('n_int', 1500)
                 n_bc = sampling_config.get('n_bc', 800)
@@ -110,8 +111,6 @@ class DGMTrainerSS_2D:
 
         for epoch in range(epochs):
             if resample and sampling_config:
-                from heat_equation_steady_state.data_sampling import generate_domain_points, generate_bc_points
-                from heat_equation_steady_state.utility_functions import source_term_fn_2D, boundary_condition_fn_2D
 
                 n_int = sampling_config.get('n_int', 2000)
                 n_bc = sampling_config.get('n_bc', 800)
