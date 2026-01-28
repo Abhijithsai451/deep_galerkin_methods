@@ -1,5 +1,6 @@
 import random
 
+from heat_equation import dgm_network
 from trainer import DGMTrainer, DGMTrainer_2D
 from visualize import *
 from heat_equation.data_sampling import *
@@ -26,9 +27,9 @@ ALPHA = 0.01
 PDE_CONSTANTS = {'alpha': ALPHA}
 
 # Data Sizes
-N_INT = 500
-N_IC = 200
-N_BC =200
+N_INT = 1000
+N_IC = 600
+N_BC =300
 
 
 # --- Data Preparation ---
@@ -53,11 +54,11 @@ bc_data = (t_bc, x_bc, u_bc)
 #visualize_points_1d(x_int,x_bc, bounds_1d)
 
 # --- Network Initialization and Training ---
-num_layers = 5
+num_layers = 6
 nodes_per_layer = 64
-learning_rate = 0.001
-epochs = 3000
-model = network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
+learning_rate = 0.0001
+epochs = 5500
+model = dgm_network.DGMNet(nodes_per_layer, num_layers, 1).to(device)
 
 trainer = DGMTrainer(
     model=model,
@@ -82,13 +83,15 @@ trainer.train(
     }
 )
 visualize_loss(trainer, title="Training Loss History - Heat Equation 1D")
-t_test_time = 2
+t_test_time = 2.0
 visualize_solution_1d(
     model=model,
     domain_bound=lx_1d,
     t_test=t_test_time,
     n_test_points=500
 )
+animate_solution_1d(model, lx_1d, t_max=2.0, device=device)
+
 print("Finished Training for Heat Equation in 1D \n\n")
 
 #%% Deep Galerkin Method in 2D

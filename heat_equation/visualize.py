@@ -6,9 +6,8 @@ import pandas as pd
 import torch
 import numpy as np
 import torch.nn as nn
-from matplotlib import cm
-from matplotlib.patches import Patch
-
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML
 from utility_functions import analytical_solution, analytical_solution_2d
 
 
@@ -196,6 +195,44 @@ def visualize_solution_1d(model: nn.Module, domain_bound: float, t_test: float, 
     plt.tight_layout()
     plt.show()
 
+
+def animate_solution_1d(model, domain_bound, t_max, num_frames=100, device='cpu'):
+    model.eval()
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # spatial grid
+    x_test_np = np.linspace(0, domain_bound, 500)
+    x_test = torch.from_numpy(x_test_np).float().reshape(-1, 1).to(device)
+
+    # Initialize lines
+    line_nn, = ax.plot([], [], label='DGM Solution', color='tab:red', lw=2, linestyle='--')
+    line_exact, = ax.plot([], [], label='Analytical Solution', color='tab:blue', lw=2, alpha=0.7)
+
+    ax.set_xlim(0, domain_bound)
+    ax.set_ylim(-1.1, 1.1)
+    ax.set_xlabel('x')
+    ax.set_ylabel('u(x, t)')
+    ax.legend()
+    title = ax.set_title('')
+
+    def update(frame):
+        t_val = (frame / (num_frames - 1)) * t_max
+        t_tensor = torch.full_like(x_test, t_val).to(device)
+
+        with torch.no_grad():
+            u_nn = model(t_tensor, x_test).cpu().numpy()
+            u_exact = analytical_solution(t_tensor, x_test).cpu().numpy()
+
+        line_nn.set_data(x_test_np, u_nn)
+        line_exact.set_data(x_test_np, u_exact)
+        title.set_text(f'Heat Equation 1D - Time: {t_val:.2f}s')
+        return line_nn, line_exact, title
+
+    ani = FuncAnimation(fig, update, frames=num_frames, blit=True)
+    plt.close()
+    return HTML(ani.to_jshtml())
+
+
 def visualize_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
     """
     Plots the DGM solution as a contour map in the x-y plane.
@@ -319,7 +356,68 @@ def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: f
     plt.show()
 
 
+def animate_solution_2d(model, bounds, t_max, n_grid=50, num_frames=50, device='cpu'):
+    model.eval()
 
+    # Setup Figure and 3D Axes
+    fig = plt.figure(figsize=(16, 8))
+    ax1 = fig.add_subplot(121, projection='3d')
+    ax2 = fig.add_subplot(122, projection='3d')
+
+    x_min, x_max = bounds[0]
+    y_min, y_max = bounds[1]
+
+    x_np = np.linspace(x_min, x_max, n_grid)
+    y_np = np.linspace(y_min, y_max, n_grid)
+    X, Y = np.meshgrid(x_np, y_np)
+
+    x_test = torch.from_numpy(X.flatten()).float().reshape(-1, 1).to(device)
+    y_test = torch.from_numpy(Y.flatten()).float().reshape(-1, 1).to(device)
+    spatial_coords = torch.cat([x_test, y_test], 1)
+
+    # Function to get data for a specific time
+    def get_data(t_val):
+        t_tensor = torch.full_like(x_test, t_val).to(device)
+        with torch.no_grad():
+            u_nn = model(t_tensor, spatial_coords).cpu().numpy().reshape(n_grid, n_grid)
+            u_exact = analytical_solution_2d(t_tensor, x_test, y_test).cpu().numpy().reshape(n_grid, n_grid)
+        return u_nn, u_exact
+
+    # Initialize plot with t=0
+    u_nn_0, u_exact_0 = get_data(0.0)
+    # Determine common Z-axis limits for comparison
+    z_min = -1.1
+    z_max = 1.1
+
+    def update(frame):
+        ax1.clear()
+        ax2.clear()
+
+        t_val = (frame / (num_frames - 1)) * t_max
+        u_nn, u_exact = get_data(t_val)
+
+        # Plot Analytical Solution (Left)
+        surf_exact = ax1.plot_surface(X, Y, u_exact, cmap='plasma', edgecolor='none', alpha=0.9)
+        ax1.set_title(f'Analytical Solution (Reference)', fontsize=12)
+        ax1.set_zlim(z_min, z_max)
+        ax1.set_xlabel('X')
+        ax1.set_ylabel('Y')
+        ax1.view_init(elev=30, azim=45)
+
+        # Plot DGM Solution (Right)
+        surf_nn = ax2.plot_surface(X, Y, u_nn, cmap='viridis', edgecolor='none', alpha=0.9)
+        ax2.set_title(f'DGM Solution', fontsize=12)
+        ax2.set_zlim(z_min, z_max)
+        ax2.set_xlabel('X')
+        ax2.set_ylabel('Y')
+        ax2.view_init(elev=30, azim=45)
+
+        fig.suptitle(f'Heat Equation 2D: Analytical vs DGM at Time t = {t_val:.2f}s', fontsize=16)
+        return fig,
+
+    ani = FuncAnimation(fig, update, frames=num_frames, blit=False)
+    plt.close()
+    return HTML(ani.to_jshtml())
 '''
 def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
     """
