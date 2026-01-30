@@ -1,98 +1,65 @@
-# Deep Galerkin Method (DGM) for Solving Partial Differential Equations
+# Deep Galerkin Method (DGM) for Heat Equation and Steady State Analysis
 
-## Overview
+This project implements the Deep Galerkin Method (DGM) to solve Partial Differential Equations (PDEs), specifically focusing on the **Heat Equation** (Time-Dependent) and the **Steady State Heat Equation** (Poisson's Equation).
 
-This project implements a Deep Learning approach, specifically the Deep Galerkin Method (DGM), to solve Partial Differential Equations (PDEs). The current implementation focuses on solving Poisson's equation in both one and two dimensions. The method leverages neural networks to approximate the solution of PDEs by minimizing a custom loss function that incorporates both the PDE residual and boundary conditions.
+---
 
-## Features
+## 1. Case 1: Heat Equation (Time-Dependent)
 
-*   **1D and 2D Poisson's Equation Solvers**: Contains functions to calculate the PDE residual for Poisson's equation in both 1D and 2D.
-*   **Physics-Informed Loss Functions**: Implements loss functions that combine the PDE residual loss with boundary condition losses, guiding the neural network to find solutions that satisfy both the differential equation and its constraints.
-*   **Custom Neural Network Architecture**:
-    *   `DenseLayer`: A standard fully connected layer with optional activation functions.
-    *   `NeuralNetwork`: An LSTM-like layer, inspired by the architecture used in Deep Galerkin Methods.
-    *   `DGMNet`: The main network architecture for the Deep Galerkin Method, composed of an initial dense layer, multiple LSTM-like layers, and a final dense output layer.
+The Heat Equation describes how heat diffuses through a medium over time:
+$$\frac{\partial u}{\partial t} - \alpha \nabla^2 u = f(t, \mathbf{x})$$
 
-## Dependencies
+### 1.1 The DGM Network and Why LSTMs?
+The implementation uses a custom `DGMNet` architecture. Unlike standard feedforward networks, DGM uses **LSTM-like layers** (Long Short-Term Memory). 
+- **Architecture**: The network consists of an initial dense layer, followed by several "DGM layers" (similar to LSTM cells), and a final dense output layer.
+- **Why LSTMs?**: Solving PDEs involves taking higher-order derivatives of the neural network with respect to its inputs (space and time). Standard deep networks often suffer from the **vanishing gradient problem** when these derivatives are propagated through many layers. The LSTM-like architecture in DGM uses gating mechanisms (like forgot and update gates) to maintain information flow and stable gradients, which is crucial for accurately approximating the complex second-order spatial derivatives required by the Heat Equation.
 
-*   Python 3.x
-*   `torch` (PyTorch)
+### 1.2 Utility Functions
+Utility functions define the "physics" of our specific problem:
+- **Source Term ($f$):** Functions like `source_term_fn_1D` and `source_term_fn_2D` calculate the external heat source/sink.
+- **Initial Conditions (IC):** `initial_condition_fn_1D` defines the state of the system at $t=0$.
+- **Boundary Conditions (BC):** `boundary_condition_fn_1D` defines the constraints at the spatial boundaries (e.g., temperatures at the edges).
+- **Analytical Solution:** Functions like `analytical_solution` provide the ground truth for validating the neural network's accuracy.
 
-## Installation
+### 1.3 Loss Functions
+The network is trained by minimizing a composite loss function:
+$$L_{total} = \lambda_{pde} L_{pde} + \lambda_{ic} L_{ic} + \lambda_{bc} L_{bc}$$
+- **PDE Residual Loss ($L_{pde}$):** Measures how well the network satisfies $\frac{\partial u}{\partial t} - \alpha \nabla^2 u - f = 0$ at random collocation points.
+- **Initial Condition Loss ($L_{ic}$):** Ensures the network matches the IC at $t=0$.
+- **Boundary Condition Loss ($L_{bc}$):** Ensures the network satisfies the BCs at the domain edges.
 
-You can install the required dependencies using pip:
+### 1.4 Training and Visualization
+Training involves sampling random points in space and time and optimizing the network parameters using Adam.
+- **Plots:** We visualize the training loss history and compare the predicted solution against the analytical solution.
+- **Animation:** For time-dependent cases, we generate animations showing how the temperature distribution evolves over time.
 
+### 1.5 Achievements
+Using DGM, we successfully trained a neural network to solve a second-order time-dependent PDE with a source function. We demonstrated that the network can accurately approximate the heat distribution $u(t, x)$ across the entire domain without needing a mesh (mesh-free method).
 
+---
 
-## Usage
+## 2. Case 2: Steady State Heat Equation (Poisson's Equation)
 
-This repository provides the core components for building and training a Deep Galerkin Method model. To use this project:
+When the system reaches equilibrium, the time derivative becomes zero, leading to the Steady State Heat Equation:
+$$- \alpha \nabla^2 u = f(\mathbf{x})$$
 
-1.  **Define your PDE problem**: Specify the domain, boundary conditions, and source term for the Poisson's equation you wish to solve.
-2. **Instantiate the `DGMNet` model**:
-   ```python
-   from dgm_network import DGMNet
-   # For a 2D problem, input_dim=2 (e.g., for x and y coordinates)
-   # For a 1D problem, input_dim=1 (e.g., for x coordinate)
-   model = DGMNet(layer_width=50, n_layers=3, input_dim=2, final_trans=None)
-   ```
-3.  **Prepare training data**: Generate collocation points within the domain and on the boundaries. These points will be used to compute the PDE residual and enforce boundary conditions.
-4. **Train the model**: Use an optimizer (e.g., Adam) and the provided `loss_function` (or `loss_function_2d`) to train the `DGMNet`.
+### 2.1 Network Architecture
+Similar to the time-dependent case, we use `DGMNet` with LSTM-like layers to handle the second-order spatial derivatives ($\nabla^2 u$). The input dimension is reduced as time is no longer a variable.
 
-    A sketch of a training loop for a 2D problem:
-   ```python
-   import torch
-   import torch.optim as optim
-   from dgm_network import DGMNet
-   from losses import loss_function_2d # Use loss_function for 1D problems
+### 2.2 Utility Functions
+For the steady state, we focus on:
+- **Steady Source Term:** `source_term_fn_1D`/`2D` representing the constant heat source.
+- **Boundary Conditions:** Standard Dirichlet conditions (e.g., $u=0$ at boundaries).
+- **Analytical Verification:** `analytical_function_1d`/`2d` used to compute relative L2 errors.
 
-   # --- Example: Define dummy data (replace with your actual problem data) ---
-   # Interior points (x_int, y_int) and corresponding source term (f_xy)
-   x_int = torch.rand(100, 1) * 2 - 1 # Example: x from -1 to 1
-   y_int = torch.rand(100, 1) * 2 - 1 # Example: y from -1 to 1
-   source_term_domain = -4 * torch.ones_like(x_int) # Example: f(x,y) = -4 for Poisson's equation
+### 2.3 Loss Functions
+The loss function is simplified as there is no Initial Condition:
+$$L_{total} = \lambda_{pde} L_{pde} + \lambda_{bc} L_{bc}$$
+The PDE loss ensures $\nabla^2 u - f = 0$ holds throughout the spatial domain.
 
-   # Boundary points (x_bc, y_bc)
-   # For simplicity, let's assume a square boundary from -1 to 1
-   x_bc_sides = torch.cat([torch.full((25,1), -1.0), torch.full((25,1), 1.0)], dim=0)
-   y_bc_sides = torch.cat([torch.full((25,1), -1.0), torch.full((25,1), 1.0)], dim=0)
-   x_bc_top_bottom = torch.cat([torch.rand(25,1)*2-1, torch.rand(25,1)*2-1], dim=0)
-   y_bc_top_bottom = torch.cat([torch.full((25,1), -1.0), torch.full((25,1), 1.0)], dim=0)
+### 2.4 Training and Visualization
+Training focuses on reaching a stable spatial distribution.
+- **Plots:** 1D solution curves or 2D heatmaps are generated to show the predicted temperature profile compared to the expected analytical results.
 
-   x_bc = torch.cat([x_bc_sides, x_bc_top_bottom], dim=0)
-   y_bc = torch.cat([y_bc_top_bottom, y_bc_sides], dim=0)
-   # ------------------------------------------------------------------------
-
-   # Initialize the model and optimizer
-   model = DGMNet(layer_width=50, n_layers=3, input_dim=2, final_trans=None)
-   optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-   # Training loop
-   num_epochs = 1000
-   print("Starting training...")
-   for epoch in range(num_epochs):
-       optimizer.zero_grad()
-       total_loss, pde_loss, bc_loss = loss_function_2d(model, x_int, y_int, source_term_domain, x_bc, y_bc)
-       total_loss.backward()
-       optimizer.step()
-
-       if (epoch + 1) % 100 == 0:
-           print(f"Epoch {epoch+1}, Total Loss: {total_loss.item():.4f}, PDE Loss: {pde_loss:.4f}, BC Loss: {bc_loss:.4f}")
-
-   print("Training complete.")
-   # You can now use the 'model' to predict solutions at new points.
-   ```
-5.  **Evaluate the solution**: Once trained, the `model` can predict the solution `u(x)` or `u(x,y)` at any given input point.
-
-## Project Structure
-
-*   `losses.py`: Contains functions for calculating PDE residuals (e.g., `pde_residual_loss`, `pde_residual_loss_2d`) and the combined loss functions (e.g., `loss_function`, `loss_function_2d`) for 1D and 2D problems.
-*   `network.py`: Defines the custom neural network layers (`DenseLayer`, `NeuralNetwork`) and the overall `DGMNet` architecture used in the Deep Galerkin Method.
-
-## Contributing
-
-Contributions are welcome! Please feel free to open issues or submit pull requests.
-
-## License
-
-This project is open-sourced under the MIT License.
+### 2.5 Achievements
+We achieved a mesh-free solution for the second-order Poisson equation. By using a neural network, we were able to find the solution $u(\mathbf{x})$ given a complex source function $f(\mathbf{x})$, effectively "learning" the physics of the steady-state heat distribution. The DGM approach proved robust in approximating the solution even with high-frequency source terms.
