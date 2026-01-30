@@ -128,7 +128,7 @@ def visualize_points_2d(domain_points:torch.Tensor,
     plt.show()
 
 
-def visualize_loss(trainer, title="Training Loss History"):
+def visualize_loss(trainer, title="Training Loss History", save_path=None):
     import matplotlib.pyplot as plt
     plt.figure(figsize=(10, 6))
     plt.plot(trainer.loss_history, label='Total Loss')
@@ -141,9 +141,11 @@ def visualize_loss(trainer, title="Training Loss History"):
     plt.title(title)
     plt.legend()
     plt.grid(True, which="both", ls="-", alpha=0.5)
+    if save_path:
+        plt.savefig(save_path)
     plt.show()
 
-def visualize_solution_1d(model: nn.Module, domain_bound: float, t_test: float, n_test_points: int = 500):
+def visualize_solution_1d(model: nn.Module, domain_bound: float, t_test: float, n_test_points: int = 500, save_path=None):
     """
     Generates test points at a fixed time t_test and plots the NN solution vs. Analytical solution.
     """
@@ -193,6 +195,8 @@ def visualize_solution_1d(model: nn.Module, domain_bound: float, t_test: float, 
     ax2.ticklabel_format(axis='y', style='sci', scilimits=(-2, 2))  # Use scientific notation for small errors
 
     plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
     plt.show()
 
 
@@ -233,7 +237,7 @@ def animate_solution_1d(model, domain_bound, t_max, num_frames=100, device='cpu'
     return HTML(ani.to_jshtml())
 
 
-def visualize_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
+def visualize_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100, save_path=None):
     """
     Plots the DGM solution as a contour map in the x-y plane.
     """
@@ -292,9 +296,11 @@ def visualize_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_g
     ax2.set_title(f'Absolute Error at Time $t = {t:.2f}$', fontsize=14)
     ax2.set_aspect('equal', adjustable='box')
     plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
     plt.show()
 
-def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100):
+def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: float, n_grid: int = 100, save_path=None):
     """
     Plots the DGM solution as a contour map in the x-y plane.
     """
@@ -353,6 +359,8 @@ def visualize_solution_2d(model: nn.Module, bounds: List[List[float]], t_test: f
 
     fig.suptitle(f'DGM Solution vs Analytical Solution at Time $t = {t:.2f}$', fontsize=20, y = 0.98)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    if save_path:
+        plt.savefig(save_path)
     plt.show()
 
 
